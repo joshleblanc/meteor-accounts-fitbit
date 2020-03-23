@@ -29,12 +29,7 @@ OAuth.registerService('fitbit', 2, null, query => {
     }
 
     return {
-        serviceData,
-        options: {
-            profile: {
-                name: identity.username + "#" + identity.discriminator
-            }
-        }
+        serviceData
     }
 });
 
