@@ -1,10 +1,10 @@
 Package.describe({
-  name: 'lichthagel:accounts-discord',
+  name: 'cereal:accounts-fitbit',
   version: '0.2.0',
   // Brief, one-line summary of the package.
-  summary: 'Adds account support for Discord',
+  summary: 'Adds account support for Fitbit',
   // URL to the Git repository containing the source code for this package.
-  git: 'https://github.com/Lichthagel/meteor-accounts-discord',
+  git: 'https://github.com/joshleblanc/meteor-accounts-fitbit',
   // By default, Meteor will default to using README.md for documentation.
   // To avoid submitting documentation, set this field to null.
   documentation: 'README.md'
@@ -17,14 +17,18 @@ Package.onUse(function (api) {
   api.imply('accounts-base', ['client', 'server']);
 
   api.use('accounts-oauth@1.1.16', ['client', 'server']);
-  api.use('lichthagel:discord-oauth@0.1.0');
-  api.imply('lichthagel:discord-oauth');
+  api.use('oauth2@1.2.1', ['client', 'server']);
+  api.use('oauth@1.2.7', ['client', 'server']);
+  api.use('http@1.4.2', 'server');
+  api.use('random@1.1.0', 'client');
+  api.use('service-configuration@1.0.11', ['client', 'server']);
 
-  api.use(
-    ['accounts-ui@1.3.1', 'lichthagel:discord-config-ui@0.1.0'],
-    ['client', 'server'],
-    { weak: true }
-  );
-  api.addFiles('notice.js');
-  api.addFiles('discord.js');
+  api.addFiles('fitbit.js');
+
+  api.addFiles('fitbit_client.js', 'client');
+  api.addFiles('fitbit_server.js', 'server');
+
+  api.mainModule('namespace.js');
+
+  api.export('Fitbit');
 });

@@ -1,19 +1,16 @@
-import Discord from './namespace.js';
+import Fitbit from './namespace.js';
 import { Accounts } from 'meteor/accounts-base';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
-Discord.whitelistedFields = ['id', 'username', 'discriminator', 'avatar', 'bot', 'mfa_enabled', 'locale', 'verified', 'email', 'flags', 'premium_type'];
+Fitbit.whitelistedFields = [];
 
-OAuth.registerService('discord', 2, null, query => {
+OAuth.registerService('fitbit', 2, null, query => {
     const tokens = getTokens(query);
-    const identity = getIdentity(tokens.access_token);
+    const identity = getIdentity(tokens.access_token).user;
     const scope = tokens.scope;
-
     var serviceData = {
-        id: identity.id,
-        username: identity.username,
-        discriminator: identity.discriminator,
+        id: tokens.user_id,
         accessToken: OAuth.sealSecret(tokens.access_token),
         tokenType: tokens.token_type,
         scope: scope
@@ -22,7 +19,7 @@ OAuth.registerService('discord', 2, null, query => {
     if (hasOwn.call(tokens, "expires_in")) {
         serviceData.expiresIn = Date.now() + 1000 * parseInt(tokens.expires_in, 10);
     }
-    Discord.whitelistedFields.forEach(name => {
+    Fitbit.whitelistedFields.forEach(name => {
         if (hasOwn.call(identity, name))
             serviceData[name] = identity[name]
     });
@@ -46,35 +43,35 @@ if (Meteor.release)
     userAgent += '/${Meteor.release}';
 
 const getTokens = query => {
-    const config = ServiceConfiguration.configurations.findOne({service: 'discord'});
+    const config = ServiceConfiguration.configurations.findOne({service: 'fitbit'});
     if (!config)
         throw new ServiceConfiguration.ConfigError();
 
     let response;
     try {
+        const auth = Buffer.from(`${config.clientId}:${OAuth.openSecret(config.secret)}`).toString('base64');
         response = HTTP.post(
-            "https://discordapp.com/api/oauth2/token", {
+            "https://api.fitbit.com/oauth2/token", {
                 headers: {
-                    Accept: 'application/json',
-                    "User-Agent": userAgent
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    Authorization: `Basic ${auth}`,
                 },
                 params: {
                     grant_type: 'authorization_code',
                     code: query.code,
                     client_id: config.clientId,
-                    client_secret: OAuth.openSecret(config.secret),
-                    redirect_uri: OAuth._redirectUri('discord', config),
+                    redirect_uri: OAuth._redirectUri('fitbit', config),
                     state: query.state
                 }
             });
     } catch (err) {
         throw Object.assign(
-            new Error(`Failed to complete OAuth handshake with Discord. ${err.message}`),
+            new Error(`Failed to complete OAuth handshake with Fitbit. ${err.message}`),
             {response: err.response},
         );
     }
     if (response.data.error) { // if the http response was a json object with an error attribute
-        throw new Error(`Failed to complete OAuth handshake with Discord. ${response.data.error}`);
+        throw new Error(`Failed to complete OAuth handshake with Fitbit. ${response.data.error}`);
     } else {
         return response.data;
     }
@@ -83,7 +80,7 @@ const getTokens = query => {
 const getIdentity = accessToken => {
     try {
         return HTTP.get(
-            "https://discordapp.com/api/users/@me", {
+            "https://api.fitbit.com/1/user/-/profile.json", {
                 headers: {
                     "User-Agent": userAgent,
                     "Authorization": "Bearer " + accessToken
@@ -91,10 +88,10 @@ const getIdentity = accessToken => {
             }).data;
     } catch (err) {
         throw Object.assign(
-            new Error('Failed to fetch identity from Discord. ${err.message}'),
+            new Error(`Failed to fetch identity from Fitbit ${err.message}`),
             {response: err.response},
         );
     }
 };
 
-Discord.retrieveCredential = (credentialToken, credentialSecret) => OAuth.retrieveCredential(credentialToken, credentialSecret);
+Fitbit.retrieveCredential = (credentialToken, credentialSecret) => OAuth.retrieveCredential(credentialToken, credentialSecret);

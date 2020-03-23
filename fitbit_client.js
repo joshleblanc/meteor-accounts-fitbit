@@ -1,6 +1,6 @@
-import Discord from './namespace.js';
+import Fitbit from './namespace.js';
 
-Discord.requestCredential = (options, credentialRequestCompleteCallback) => {
+Fitbit.requestCredential = (options, credentialRequestCompleteCallback) => {
     if (!credentialRequestCompleteCallback && typeof options === 'function') {
         credentialRequestCompleteCallback = options;
         options = {};
@@ -8,7 +8,7 @@ Discord.requestCredential = (options, credentialRequestCompleteCallback) => {
         options = {};
     }
 
-    const config = ServiceConfiguration.configurations.findOne({service: 'discord'});
+    const config = ServiceConfiguration.configurations.findOne({service: 'fitbit'});
     if (!config) {
         credentialRequestCompleteCallback && credentialRequestCompleteCallback(new ServiceConfiguration.ConfigError());
         return;
@@ -16,21 +16,22 @@ Discord.requestCredential = (options, credentialRequestCompleteCallback) => {
 
     const credentialToken = Random.secret();
 
-    const scope = (options && options.requestPermissions) || ['identify', 'email'];
+    const scope = (options && options.requestPermissions) || ['profile'];
     const flatScope = scope.map(encodeURIComponent).join('+');
 
-    const loginStyle = OAuth._loginStyle('discord', config, options);
+    const loginStyle = OAuth._loginStyle('fitbit', config, options);
+    console.log(OAuth._redirectUri('fitbit', config));
 
     const loginUrl =
-        'https://discordapp.com/api/oauth2/authorize' +
+        'https://www.fitbit.com/oauth2/authorize' +
         '?client_id=' + config.clientId +
         '&response_type=code' +
         '&scope=' + flatScope +
-        '&redirect_uri=' + OAuth._redirectUri('discord', config) +
+        '&redirect_uri=' + OAuth._redirectUri('fitbit', config) +
         '&state=' + OAuth._stateParam(loginStyle, credentialToken, options && options.redirectUrl);
 
     OAuth.launchLogin({
-        loginService: 'discord',
+        loginService: 'fitbit',
         loginStyle,
         loginUrl,
         credentialRequestCompleteCallback,
