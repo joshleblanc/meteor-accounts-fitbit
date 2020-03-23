@@ -1,6 +1,6 @@
 Package.describe({
   name: 'cereal:accounts-fitbit',
-  version: '1.0.1',
+  version: '1.0.2',
   // Brief, one-line summary of the package.
   summary: 'Adds account support for Fitbit',
   // URL to the Git repository containing the source code for this package.
@@ -13,7 +13,7 @@ Package.describe({
 Package.onUse(function (api) {
   api.use('ecmascript@0.12.4');
   api.use('accounts-base@1.4.3', ['client', 'server']);
-  api.use('bozhao:link-accounts');
+  api.use('bozhao:link-accounts@2.1.0');
   // Export Accounts (etc) to packages using this one.
   api.imply('accounts-base', ['client', 'server']);
 
